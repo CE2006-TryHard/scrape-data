@@ -11,12 +11,12 @@ url = "https://www.edgeprop.sg/en-bloc-calculator"
 driver = webdriver.Chrome(PATH)
 driver.get(url)
 
-df = pd.DataFrame({'name': [], 'score': []})
+df = pd.DataFrame({'name': [], 'score': [], 'href': ''})
 
 input1 = driver.find_element(By.XPATH, '//*[@id="app"]/div/div/div[1]/div/div/div/div[1]/div[2]/div/div/input[1]')
 submit_button = driver.find_element(By.XPATH, '//*[@id="showme"]')
 
-def checkIfResultMatch(condoName):
+def checkIfResultMatch(condoName, href):
     global df
     # driver.implicitly_wait(5)
     time.sleep(2)
@@ -26,28 +26,28 @@ def checkIfResultMatch(condoName):
         submit_button.click()
         time.sleep(1)
         percentage = driver.find_element(By.XPATH, '//*[@id="app"]/div/div/div[1]/div/div/div/div[3]/div[1]').text
-        df = df.append({'name': condoName, 'score': percentage}, ignore_index=True)
+        df = df.append({'name': condoName, 'score': percentage, href: href}, ignore_index=True)
         print(condoName+ ' score: '+percentage)
     else:
-        df = df.append({'name': condoName, 'score': 'null'}, ignore_index=True)
+        df = df.append({'name': condoName, 'score': 'null', href: href}, ignore_index=True)
         print(condoName + " not found")
 
-def checkIfResultPanelOccurs(condoName):
+def checkIfResultPanelOccurs(condoName, href):
     try:
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="app"]/div/div/div[1]/div/div/div/div[1]/div[2]/div/ul'))
         )
-        checkIfResultMatch(condoName)
+        checkIfResultMatch(condoName, href)
     finally:
         pass
 
-df_names = pd.read_csv("./condo-names.csv")
+df_names = pd.read_csv("./../dist/condo_dist_page.csv")
 
 for index, row in df_names.iterrows():
     input1.send_keys(Keys.CONTROL + "a")
     input1.send_keys(Keys.DELETE)
     input1.send_keys(row['name'])
-    checkIfResultPanelOccurs(row['name'])
+    checkIfResultPanelOccurs(row['name'], row['href'])
     
 
 df.to_csv("./output/condo_scores.csv", index=False)
